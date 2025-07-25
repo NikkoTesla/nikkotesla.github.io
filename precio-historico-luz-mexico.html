@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Nikko Tesla">
+    <title>Precio Histórico de la Luz en México 2012-2025</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for sortable table headers */
+        .sortable {
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+        }
+        .sortable:after {
+            content: ' \2195'; /* Up-down arrow */
+            opacity: 0.4;
+            font-size: 0.9em;
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .sort-asc:after {
+            content: ' \25B2'; /* Up arrow */
+            opacity: 1;
+        }
+        .sort-desc:after {
+            content: ' \25BC'; /* Down arrow */
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="#" class="flex-shrink-0 flex items-center">
+                        <!-- Logo -->
+                        <img src="img/logo_nikkotesla.png" height="40" width="40" />
+                        <span class="ml-3 text-xl font-bold text-gray-800">Nikko Tesla</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex items-center justify-center p-4 py-10">
+        <div class="w-full max-w-7xl bg-white rounded-2xl shadow-lg p-6 md:p-10 transition-all duration-300 hover:shadow-2xl">
+            
+            <header class="mb-8 text-center">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Precio Histórico de la Luz en México</h1>
+                <p class="text-gray-500 mt-2">Costo por kWh en las tarifas Básica, Intermedia y Excedente (Bimestral 2012-2025).</p>
+            </header>
+            
+            <div class="relative h-72 md:h-96 mb-12">
+                <canvas id="priceHistoryChart"></canvas>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm text-left text-gray-500 rounded-lg">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" data-column="date" class="sortable px-6 py-3 rounded-tl-lg">Fecha</th>
+                            <th scope="col" data-column="basic" class="sortable px-6 py-3">Tarifa Básica (MXN)</th>
+                            <th scope="col" data-column="intermediate" class="sortable px-6 py-3">Tarifa Intermedia (MXN)</th>
+                            <th scope="col" data-column="surplus" class="sortable px-6 py-3">Tarifa Excedente (MXN)</th>
+                            <th scope="col" data-column="president" class="sortable px-6 py-3 rounded-tr-lg">Presidente</th>
+                        </tr>
+                    </thead>
+                    <tbody id="priceTableBody">
+                        <!-- JS will populate this -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- DATA (Corrected from source file) ---
+        const fullData = [
+            {date: "Feb 2012", basic: 0.733, intermediate: 1.229, surplus: 2.593, president: "Felipe Calderón Hinojosa"},
+            {date: "Apr 2012", basic: 0.737, intermediate: null, surplus: null, president: "Felipe Calderón Hinojosa"},
+            {date: "Jun 2012", basic: 0.741, intermediate: null, surplus: null, president: "Felipe Calderón Hinojosa"},
+            {date: "Aug 2012", basic: 0.745, intermediate: null, surplus: null, president: "Felipe Calderón Hinojosa"},
+            {date: "Oct 2012", basic: 0.749, intermediate: 0.912, surplus: null, president: "Felipe Calderón Hinojosa"},
+            {date: "Dec 2012", basic: 0.753, intermediate: 0.918, surplus: 2.682, president: "Enrique Peña Nieto"},
+            {date: "Feb 2013", basic: 0.757, intermediate: 0.924, surplus: 2.700, president: "Enrique Peña Nieto"},
+            {date: "Apr 2013", basic: 0.761, intermediate: 0.930, surplus: 2.718, president: "Enrique Peña Nieto"},
+            {date: "Jun 2013", basic: 0.765, intermediate: 0.936, surplus: 2.736, president: "Enrique Peña Nieto"},
+            {date: "Aug 2013", basic: 0.771, intermediate: null, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Oct 2013", basic: 0.777, intermediate: null, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Dec 2013", basic: 0.786, intermediate: 0.957, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Feb 2014", basic: 0.792, intermediate: 0.963, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Apr 2014", basic: 0.798, intermediate: 0.969, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Jun 2014", basic: 0.804, intermediate: 0.975, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Aug 2014", basic: 0.810, intermediate: 0.981, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Oct 2014", basic: 0.816, intermediate: null, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Dec 2014", basic: 0.822, intermediate: null, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Feb 2015", basic: 0.809, intermediate: null, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Apr 2015", basic: 0.809, intermediate: 0.976, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Jun 2015", basic: 0.809, intermediate: 0.976, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Aug 2015", basic: 0.809, intermediate: 0.976, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Oct 2015", basic: 0.809, intermediate: 0.976, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Dec 2015", basic: 0.809, intermediate: 0.976, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Feb 2016", basic: 0.809, intermediate: 0.976, surplus: null, president: "Enrique Peña Nieto"},
+            {date: "Apr 2016", basic: 0.809, intermediate: 0.976, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Jun 2016", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Aug 2016", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Oct 2016", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Dec 2016", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Feb 2017", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Apr 2017", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Jun 2017", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Aug 2017", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Oct 2017", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Dec 2017", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Feb 2018", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Apr 2018", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Jun 2018", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Aug 2018", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Oct 2018", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Enrique Peña Nieto"},
+            {date: "Dec 2018", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Andrés Manuel López Obrador"},
+            {date: "Feb 2019", basic: 0.793, intermediate: 0.956, surplus: 2.802, president: "Andrés Manuel López Obrador"},
+            {date: "Apr 2019", basic: 0.799, intermediate: 0.964, surplus: 2.824, president: "Andrés Manuel López Obrador"},
+            {date: "Jun 2019", basic: 0.805, intermediate: 0.972, surplus: 2.846, president: "Andrés Manuel López Obrador"},
+            {date: "Aug 2019", basic: 0.811, intermediate: 0.980, surplus: 2.868, president: "Andrés Manuel López Obrador"},
+            {date: "Oct 2019", basic: 0.817, intermediate: 0.988, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Dec 2019", basic: 0.823, intermediate: 0.996, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Feb 2020", basic: 0.829, intermediate: 1.004, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Apr 2020", basic: 0.833, intermediate: null, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Jun 2020", basic: 0.841, intermediate: 1.012, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Aug 2020", basic: 0.841, intermediate: null, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Oct 2020", basic: 0.845, intermediate: 1.020, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Dec 2020", basic: 0.849, intermediate: 1.025, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Feb 2021", basic: 0.853, intermediate: 1.031, surplus: 3.018, president: "Andrés Manuel López Obrador"},
+            {date: "Apr 2021", basic: 0.857, intermediate: 1.037, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Jun 2021", basic: 0.861, intermediate: 1.043, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Aug 2021", basic: 0.865, intermediate: 1.049, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Oct 2021", basic: 0.869, intermediate: 1.055, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Dec 2021", basic: 0.873, intermediate: 1.061, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Feb 2022", basic: 0.877, intermediate: 1.067, surplus: 3.115, president: "Andrés Manuel López Obrador"},
+            {date: "Apr 2022", basic: 0.887, intermediate: 1.079, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Jun 2022", basic: 0.897, intermediate: 1.091, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Aug 2022", basic: 0.907, intermediate: 1.104, surplus: 3.229, president: "Andrés Manuel López Obrador"},
+            {date: "Oct 2022", basic: 0.917, intermediate: 1.118, surplus: 3.267, president: "Andrés Manuel López Obrador"},
+            {date: "Dec 2022", basic: 0.927, intermediate: 1.132, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Feb 2023", basic: 0.939, intermediate: 1.146, surplus: 3.346, president: "Andrés Manuel López Obrador"},
+            {date: "Apr 2023", basic: 0.951, intermediate: 1.160, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Jun 2023", basic: 0.963, intermediate: 1.174, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Aug 2023", basic: 0.975, intermediate: 1.188, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Oct 2023", basic: 0.987, intermediate: 1.203, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Dec 2023", basic: 0.999, intermediate: 1.219, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Feb 2024", basic: 1.011, intermediate: 1.235, surplus: 3.607, president: "Andrés Manuel López Obrador"},
+            {date: "Apr 2024", basic: 1.019, intermediate: 1.243, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Jun 2024", basic: 1.027, intermediate: 1.251, surplus: 3.659, president: "Andrés Manuel López Obrador"},
+            {date: "Aug 2024", basic: 1.035, intermediate: 1.259, surplus: null, president: "Andrés Manuel López Obrador"},
+            {date: "Oct 2024", basic: 1.043, intermediate: 1.267, surplus: null, president: "Claudia Sheinbaum Pardo"},
+            {date: "Dec 2024", basic: 1.051, intermediate: 1.275, surplus: null, president: "Claudia Sheinbaum Pardo"},
+            {date: "Feb 2025", basic: 1.059, intermediate: 1.285, surplus: 3.763, president: "Claudia Sheinbaum Pardo"},
+            {date: "Apr 2025", basic: 1.067, intermediate: 1.295, surplus: 3.791, president: "Claudia Sheinbaum Pardo"},
+            {date: "Jun 2025", basic: 1.075, intermediate: 1.305, surplus: 3.819, president: "Claudia Sheinbaum Pardo"}
+        ];
+
+        let sortState = { column: 'date', direction: 'desc' };
+        let chartInstance;
+        let dataForTable = [...fullData];
+
+        // --- UTILS ---
+        const currencyFormatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 3 });
+        
+        function getChangeInfo(current, previous) {
+            if (current === null || current === undefined || previous === null || previous === undefined) {
+                return ''; // Return empty string if data is missing
+            }
+            
+            const percent = (previous === 0) ? (current > 0 ? 100 : 0) : ((current - previous) / previous) * 100;
+            
+            let icon, color;
+            if (percent > 0) {
+                icon = '<span class="font-bold">&uarr;</span>';
+                color = 'text-red-500';
+            } else {
+                icon = (percent < 0) ? '<span class="font-bold">&darr;</span>' : '<span>-</span>';
+                color = 'text-green-500';
+            }
+            
+            return `<div class="text-xs ${color}">${icon} ${percent.toFixed(2)}%</div>`;
+        }
+        
+        // Helper to convert date string "Mmm YYYY" to a sortable format "YYYY-MM"
+        function dateToDateString(dateStr) {
+            const monthMap = { 
+                'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 
+                'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' 
+            };
+            const [monthStr, year] = dateStr.split(' ');
+            return `${year}-${monthMap[monthStr]}`;
+        }
+
+        // --- CHART ---
+        function renderChart(data) {
+            if (chartInstance) chartInstance.destroy();
+            const chartData = {
+                labels: data.map(d => d.date),
+                datasets: [
+                    { label: 'Tarifa Básica', data: data.map(d => d.basic), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', pointRadius: 0, tension: 0.2, fill: true, borderWidth: 2 },
+                    { label: 'Tarifa Intermedia', data: data.map(d => d.intermediate), borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', pointRadius: 0, tension: 0.2, fill: true, borderWidth: 2 },
+                    { label: 'Tarifa Excedente', data: data.map(d => d.surplus), borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', pointRadius: 0, tension: 0.2, fill: true, borderWidth: 2 }
+                ]
+            };
+            const config = { type: 'line', data: chartData, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { padding: 25, font: { size: 14, family: "'Inter', sans-serif" }, usePointStyle: true, pointStyle: 'rectRounded'} }, tooltip: { enabled: true, mode: 'index', intersect: false, backgroundColor: '#1f2937', titleFont: { size: 16, weight: 'bold' }, bodyFont: { size: 14 }, padding: 12, cornerRadius: 8, callbacks: { label: (c) => `${c.dataset.label}: ${currencyFormatter.format(c.parsed.y)}` } } }, scales: { y: { beginAtZero: false, grid: { drawBorder: false }, ticks: { padding: 10, callback: (v) => currencyFormatter.format(v) }, title: { display: true, text: 'Precio (MXN por kWh)', font: { size: 14, weight: '600'} } }, x: { grid: { display: false }, ticks: { maxTicksLimit: 12, maxRotation: 45, minRotation: 45 }, title: { display: true, text: 'Fecha', font: { size: 14, weight: '600'} } } }, interaction: { intersect: false, mode: 'index' } } };
+            const ctx = document.getElementById('priceHistoryChart').getContext('2d');
+            chartInstance = new Chart(ctx, config);
+        }
+
+        // --- TABLE ---
+        function renderTable(data) {
+            const tableBody = document.getElementById('priceTableBody');
+            tableBody.innerHTML = '';
+            
+            const chronologicalData = [...fullData].sort((a, b) => dateToDateString(a.date).localeCompare(dateToDateString(b.date)));
+
+            data.forEach((row) => {
+                const currentIndex = chronologicalData.findIndex(p => p.date === row.date);
+                const prevRow = currentIndex > 0 ? chronologicalData[currentIndex - 1] : null;
+
+                const basicChangeHtml = getChangeInfo(row.basic, prevRow?.basic);
+                const intermediateChangeHtml = getChangeInfo(row.intermediate, prevRow?.intermediate);
+                const surplusChangeHtml = getChangeInfo(row.surplus, prevRow?.surplus);
+
+                const tableRow = document.createElement('tr');
+                tableRow.className = 'bg-white border-b hover:bg-gray-50';
+                
+                tableRow.innerHTML = `
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${row.date}</th>
+                    <td class="px-6 py-4"><div>${row.basic !== null && row.basic !== undefined ? currencyFormatter.format(row.basic) : ''}</div>${basicChangeHtml}</td>
+                    <td class="px-6 py-4"><div>${row.intermediate !== null && row.intermediate !== undefined ? currencyFormatter.format(row.intermediate) : ''}</div>${intermediateChangeHtml}</td>
+                    <td class="px-6 py-4"><div>${row.surplus !== null && row.surplus !== undefined ? currencyFormatter.format(row.surplus) : ''}</div>${surplusChangeHtml}</td>
+                    <td class="px-6 py-4">${row.president}</td>
+                `;
+                tableBody.appendChild(tableRow);
+            });
+        }
+        
+        // --- SORTING ---
+        function sortData() {
+            const { column, direction } = sortState;
+            
+            dataForTable.sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+
+                if (column === 'date') {
+                    valA = dateToDateString(a.date);
+                    valB = dateToDateString(b.date);
+                }
+                
+                let result = 0;
+                if (valA < valB) result = -1;
+                if (valA > valB) result = 1;
+
+                return direction === 'asc' ? result : -result;
+            });
+        }
+        
+        function handleSort(e) {
+            const column = e.target.closest('.sortable')?.dataset.column;
+            if (!column) return;
+            
+            const isAsc = sortState.column === column && sortState.direction === 'asc';
+            sortState.column = column;
+            sortState.direction = isAsc ? 'desc' : 'asc';
+            
+            document.querySelectorAll('.sortable').forEach(th => {
+                th.classList.remove('sort-asc', 'sort-desc');
+                if (th.dataset.column === column) {
+                    th.classList.add(sortState.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+                }
+            });
+
+            sortData();
+            renderTable(dataForTable);
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            sortData();
+            renderTable(dataForTable);
+            renderChart([...fullData].sort((a, b) => dateToDateString(a.date).localeCompare(dateToDateString(b.date))));
+
+            document.querySelector('thead').addEventListener('click', handleSort);
+            
+            const initialHeader = document.querySelector(`[data-column="${sortState.column}"]`);
+            if (initialHeader) {
+                initialHeader.classList.add(sortState.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+            }
+        });
+    </script>
+
+    
+</body>
+</html>
