@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Nikko Tesla">
+    <title>Calculadora de Hipoteca Avanzada - NikkoTesla</title>
+    <link rel="icon" type="image/png" href="./favicon.png">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+
+    <!-- Google Analytics - Reemplaza 'G-XXXXXXXXXX' con tu ID de Medición -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V1S2W01VFP"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        // *** REEMPLAZA 'G-XXXXXXXXXX' CON TU ID DE MEDICIÓN DE GOOGLE ANALYTICS ***
+        gtag('config', 'G-V1S2W01VFP');
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #d1d5db;
+        }
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none;
+            width: 100%; height: 8px;
+            background: #374151; border-radius: 5px;
+            outline: none; opacity: 0.7; transition: opacity .2s;
+        }
+        input[type="range"]:hover { opacity: 1; }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px;
+            background: #3b82f6; cursor: pointer;
+            border-radius: 50%; border: 2px solid #1f2937;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 20px; height: 20px;
+            background: #3b82f6; cursor: pointer;
+            border-radius: 50%; border: 2px solid #1f2937;
+        }
+        .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
+        .table-container::-webkit-scrollbar-track { background: #1f2937; }
+        .table-container::-webkit-scrollbar-thumb {
+            background-color: #374151; border-radius: 10px;
+            border: 2px solid #1f2937;
+        }
+        .table-container { scrollbar-width: thin; scrollbar-color: #374151 #1f2937; }
+        .prepayment-input {
+            background-color: #1f2937;
+            border: 1px solid #4b5563;
+            border-radius: 4px;
+            color: white;
+            text-align: right;
+            padding: 2px 4px;
+            width: 110px;
+        }
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #ef4444;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 30px;
+            opacity: 0;
+            transition: opacity 0.5s, bottom 0.5s, visibility 0.5s;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+        .editable-value {
+            cursor: pointer;
+            transition: background-color 0.2s;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        .editable-value:hover {
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-800">
+        <nav class="container mx-auto px-4 lg:px-6 py-4">
+            <div class="flex items-center justify-between">
+                <a href="#" class="flex items-center space-x-3">
+                    <img src="img/logo_nikkotesla.png" height="40" width="40" />
+                    <span class="text-2xl font-bold text-white">NikkoTesla Tools</span>
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 lg:px-6 py-8 md:py-12">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight">Calculadora de Hipoteca Avanzada</h1>
+            <p class="mt-3 max-w-2xl mx-auto text-lg text-gray-400">Descubre, proyecta y optimiza tu crédito hipotecario.</p>
+        </div>
+
+        <!-- Main results section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-12">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700 flex flex-col justify-center items-center">
+                <label for="monthlyIncome" class="text-lg font-medium text-gray-400 mb-2">Tu Ingreso Bruto Mensual (MXN)</label>
+                <input type="text" id="monthlyIncome" value="$20,000.00" class="w-full bg-gray-900 text-white text-3xl font-bold text-center p-3 rounded-lg border-2 border-gray-600 focus:border-blue-500 focus:ring-blue-500 transition">
+            </div>
+            <div class="bg-blue-600/20 p-6 rounded-xl shadow-lg border border-blue-500 flex flex-col justify-center items-center text-center">
+                <label for="propertyValue" class="text-lg font-medium text-blue-200 mb-2">Valor de Vivienda</label>
+                 <input type="text" id="propertyValue" value="$0.00" class="w-full bg-transparent text-white text-4xl lg:text-5xl font-extrabold text-center p-3 rounded-lg border-2 border-transparent focus:border-blue-500 focus:ring-blue-500 transition">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Credit Configuration Card -->
+            <div id="initialExpensesCard" class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+                <h3 class="text-2xl font-bold text-white mb-4">Configuración del Crédito</h3>
+                <div class="border-t border-b border-gray-700 py-4 mb-6">
+                    <div class="flex justify-between items-center"><p class="text-xl font-bold text-white">Total Gastos Iniciales</p><p id="totalInitialExpenses" class="text-xl font-bold text-green-400">$0.00</p></div>
+                </div>
+                <div class="space-y-6">
+                    <!-- Sliders -->
+                    <div><div class="flex justify-between items-center mb-1"><label for="loanTerm" class="font-medium text-gray-300">Plazo del Crédito</label><span id="loanTermLabel" data-slider-id="loanTerm" class="editable-value text-blue-400 font-semibold">20 Años</span></div><input type="range" id="loanTerm" min="7" max="20" value="20" step="1" class="w-full"></div>
+                    <div><div class="flex justify-between items-center mb-1"><label for="annualRate" class="font-medium text-gray-300">Tasa de Interés Anual</label><span id="annualRateLabel" data-slider-id="annualRate" class="editable-value text-blue-400 font-semibold">10%</span></div><input type="range" id="annualRate" min="3" max="15" value="10" step="0.1" class="w-full"></div>
+                    <div><div class="flex justify-between items-center mb-1"><label for="downPayment" class="font-medium text-gray-300">Enganche</label><span id="downPaymentLabel" data-slider-id="downPayment" class="editable-value text-blue-400 font-semibold">10%</span></div><input type="range" id="downPayment" min="10" max="80" value="10" step="1" class="w-full"><p id="downPaymentValue" class="text-right text-gray-400 mt-1 text-sm">$0.00</p></div>
+                    <div><div class="flex justify-between items-center mb-1"><label for="notaryFees" class="font-medium text-gray-300">Gastos de Escrituración</label><span id="notaryFeesLabel" data-slider-id="notaryFees" class="editable-value text-blue-400 font-semibold">5%</span></div><input type="range" id="notaryFees" min="3" max="15" value="5" step="0.5" class="w-full"><p id="notaryFeesValue" class="text-right text-gray-400 mt-1 text-sm">$0.00</p></div>
+                    <div><div class="flex justify-between items-center mb-1"><label for="openingFee" class="font-medium text-gray-300">Comisión por Apertura</label><span id="openingFeeLabel" data-slider-id="openingFee" class="editable-value text-blue-400 font-semibold">1%</span></div><input type="range" id="openingFee" min="0" max="5" value="1" step="0.1" class="w-full"><p id="openingFeeValue" class="text-right text-gray-400 mt-1 text-sm">$0.00</p></div>
+                    <div><div class="flex justify-between items-center mb-1"><label for="appraisal" class="font-medium text-gray-300">Avalúo</label><span id="appraisalLabel" data-slider-id="appraisal" class="editable-value text-blue-400 font-semibold">0.25%</span></div><input type="range" id="appraisal" min="0" max="2" value="0.25" step="0.05" class="w-full"><p id="appraisalValue" class="text-right text-gray-400 mt-1 text-sm">$0.00</p></div>
+                </div>
+            </div>
+
+            <!-- Monthly Expenses Card -->
+            <div id="monthlyExpensesCard" class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+                <h3 class="text-2xl font-bold text-white mb-4">Gastos Mensuales</h3>
+                <div class="border-t border-b border-gray-700 py-4 mb-6">
+                    <div class="flex justify-between items-center"><p class="text-xl font-bold text-white">Pago Mensual Estimado</p><p id="totalMonthlyPayment" class="text-xl font-bold text-green-400">$0.00</p></div>
+                </div>
+                <div class="h-64 relative mb-6"><canvas id="amortizationChart"></canvas></div>
+                <h4 class="text-lg font-semibold text-white mb-2">Tabla de Amortización Detallada</h4>
+                <div class="table-container overflow-x-auto max-h-64">
+                    <table id="detailedAmortizationTable" class="w-full text-sm text-left text-gray-400">
+                        <thead class="text-xs text-gray-300 uppercase bg-gray-700/50 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-3">Mes</th><th class="px-4 py-3">Saldo</th><th class="px-4 py-3">Capital</th><th class="px-4 py-3">Interés</th><th class="px-4 py-3">Seguros</th><th class="px-4 py-3">Pago</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailedAmortizationTableBody" class="divide-y divide-gray-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="analysisDivider" class="my-12 border-t border-gray-700"></div>
+
+        <div id="analysisContainer" class="space-y-12">
+            <div id="projectionSection" class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+                <h3 class="text-2xl font-bold text-white mb-4">Proyección Financiera</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-4 border-b border-gray-700 pb-4">
+                    <!-- Period 1 -->
+                    <div class="space-y-2">
+                        <h4 class="text-lg font-semibold text-white">Primer Tramo de Plusvalía</h4>
+                        <div>
+                            <div class="flex justify-between items-center mb-1"><label for="appreciationTerm1" class="font-medium text-gray-300">Duración</label><span id="appreciationTerm1Label" data-slider-id="appreciationTerm1" class="editable-value text-blue-400 font-semibold">10 Años</span></div>
+                            <input type="range" id="appreciationTerm1" min="1" max="19" value="10" step="1" class="w-full">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1"><label for="appreciationRate1" class="font-medium text-gray-300">Plusvalía Anual</label><span id="appreciationRate1Label" data-slider-id="appreciationRate1" class="editable-value text-blue-400 font-semibold">5%</span></div>
+                            <input type="range" id="appreciationRate1" min="0" max="100" value="5" step="0.5" class="w-full">
+                        </div>
+                    </div>
+                    <!-- Period 2 -->
+                    <div class="space-y-2">
+                        <h4 class="text-lg font-semibold text-white">Segundo Tramo de Plusvalía</h4>
+                        <div>
+                            <div class="flex justify-between items-center mb-1"><label class="font-medium text-gray-300">Duración</label><span id="appreciationTerm2Label" class="text-blue-400 font-semibold">10 Años</span></div>
+                            <div class="h-2 bg-gray-700 rounded-full mt-2"></div> <!-- Placeholder for slider alignment -->
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1"><label for="appreciationRate2" class="font-medium text-gray-300">Plusvalía Anual</label><span id="appreciationRate2Label" data-slider-id="appreciationRate2" class="editable-value text-blue-400 font-semibold">5%</span></div>
+                            <input type="range" id="appreciationRate2" min="0" max="100" value="5" step="0.5" class="w-full">
+                        </div>
+                    </div>
+                </div>
+                <div class="h-80 relative"><canvas id="projectionChart"></canvas></div>
+                <div id="financialWarning" class="hidden mt-4 text-center text-yellow-400 bg-yellow-900/50 p-3 rounded-lg text-sm"></div>
+                <p class="text-xs text-gray-500 mt-4 text-center">Proyección basada en una plusvalía anual por tramos. El valor real de un inmueble puede variar significativamente según su ubicación, estado de conservación y las condiciones del mercado.</p>
+            </div>
+
+            <div id="strategySection" class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+                <h3 class="text-2xl font-bold text-white mb-2">Estrategia Financiera: Pagos Anticipados</h3>
+                <p class="text-gray-400 mb-4">Realiza pagos anticipados a capital para ahorrar miles de pesos en intereses y reducir el plazo de tu crédito. Ingresa un monto en la columna "Pago Anticipado" para ver el impacto en tiempo real.</p>
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-lg font-semibold text-white mb-2">Tabla de Amortización Interactiva</h4>
+                        <div class="table-container overflow-x-auto max-h-96">
+                            <table id="strategyTable" class="w-full text-sm text-left text-gray-400">
+                                <thead class="text-xs text-gray-300 uppercase bg-gray-700/50 sticky top-0">
+                                    <tr>
+                                        <th class="px-4 py-3">Mes</th><th class="px-4 py-3">Saldo</th><th class="px-4 py-3">Pago Mensual</th><th class="px-4 py-3">Pago Anticipado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="strategyTableBody" class="divide-y divide-gray-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-semibold text-white mb-2">Impacto en Saldo e Intereses</h4>
+                        <div class="h-80 relative"><canvas id="strategyChart"></canvas></div>
+                        <div id="strategySummary" class="mt-6 space-y-2 text-sm">
+                            <div class="flex justify-between items-center bg-gray-900/50 p-2 rounded-md">
+                                <span class="font-medium text-gray-400">Total Pagado:</span>
+                                <span id="summaryTotalPaid" class="font-semibold text-white">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-gray-900/50 p-2 rounded-md">
+                                <span class="font-medium text-gray-400">Intereses Pagados:</span>
+                                <span id="summaryInterestPaid" class="font-semibold text-white">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-green-900/50 p-2 rounded-md">
+                                <span class="font-medium text-green-300">Total Ahorrado:</span>
+                                <span id="summarySavings" class="font-semibold text-green-300">$0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-gray-900/50 p-2 rounded-md">
+                                <span class="font-medium text-gray-400">Nuevo Plazo:</span>
+                                <span id="summaryNewTerm" class="font-semibold text-white">0 Años</span>
+                            </div>
+                             <div class="flex justify-between items-center bg-gray-900/50 p-2 rounded-md">
+                                <span class="font-medium text-gray-400">Meses Reducidos:</span>
+                                <span id="summaryMonthsSaved" class="font-semibold text-white">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="mt-16 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
+            <p class="mb-2">Hecho con ❤️ por NikkoTesla</p>
+            <p>Copyright © 2025 NikkoTesla. Todos los derechos reservados.</p>
+        </footer>
+
+        <div id="toast" class="toast"></div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- DOM ELEMENTS ---
+            const allInputs = document.querySelectorAll('input[type="range"], #monthlyIncome');
+            const monthlyIncomeInput = document.getElementById('monthlyIncome');
+            const propertyValueInput = document.getElementById('propertyValue');
+            const loanTermSlider = document.getElementById('loanTerm');
+            const loanTermLabel = document.getElementById('loanTermLabel');
+            const downPaymentLabel = document.getElementById('downPaymentLabel');
+            const notaryFeesLabel = document.getElementById('notaryFeesLabel');
+            const openingFeeLabel = document.getElementById('openingFeeLabel');
+            const appraisalLabel = document.getElementById('appraisalLabel');
+            const annualRateLabel = document.getElementById('annualRateLabel');
+            const downPaymentValue = document.getElementById('downPaymentValue');
+            const notaryFeesValue = document.getElementById('notaryFeesValue');
+            const openingFeeValue = document.getElementById('openingFeeValue');
+            const appraisalValue = document.getElementById('appraisalValue');
+            const totalInitialExpenses = document.getElementById('totalInitialExpenses');
+            const totalMonthlyPayment = document.getElementById('totalMonthlyPayment');
+            const initialExpensesCard = document.getElementById('initialExpensesCard');
+            const monthlyExpensesCard = document.getElementById('monthlyExpensesCard');
+            const analysisDivider = document.getElementById('analysisDivider');
+            const analysisContainer = document.getElementById('analysisContainer');
+            const amortizationChartCanvas = document.getElementById('amortizationChart');
+            const detailedAmortizationTable = document.getElementById('detailedAmortizationTable');
+            const detailedAmortizationTableBody = document.getElementById('detailedAmortizationTableBody');
+            const projectionChartCanvas = document.getElementById('projectionChart');
+            const financialWarning = document.getElementById('financialWarning');
+            const strategyChartCanvas = document.getElementById('strategyChart');
+            const strategyTable = document.getElementById('strategyTable');
+            const strategyTableBody = document.getElementById('strategyTableBody');
+            const appreciationTerm1Slider = document.getElementById('appreciationTerm1');
+            const appreciationTerm1Label = document.getElementById('appreciationTerm1Label');
+            const appreciationRate1Label = document.getElementById('appreciationRate1Label');
+            const appreciationTerm2Label = document.getElementById('appreciationTerm2Label');
+            const appreciationRate2Label = document.getElementById('appreciationRate2Label');
+            const summaryTotalPaid = document.getElementById('summaryTotalPaid');
+            const summaryInterestPaid = document.getElementById('summaryInterestPaid');
+            const summarySavings = document.getElementById('summarySavings');
+            const summaryNewTerm = document.getElementById('summaryNewTerm');
+            const summaryMonthsSaved = document.getElementById('summaryMonthsSaved');
+            const toast = document.getElementById('toast');
+
+
+            // --- CONSTANTS & STATE ---
+            const MONTHS_IN_YEAR = 12;
+            const INCOME_TO_MORTGAGE_RATIO = 0.35;
+            const IVA_RATE = 0.16;
+            const LIFE_INSURANCE_FACTOR = 0.00038;
+            const DAMAGE_INSURANCE_FACTOR = 0.00025;
+            const MIN_PROPERTY_VALUE = 699990;
+
+            let amortizationChart = null, projectionChart = null, strategyChart = null;
+            let prepayments = [];
+            let baselineTotalPaid = 0;
+            let maxCalculatedPropertyValue = 0;
+
+            // --- HELPER FUNCTIONS ---
+            const formatCurrency = (value) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(value);
+            const parseCurrency = (value) => Number(String(value).replace(/[^0-9.-]+/g,""));
+            const formatInputAsCurrency = (e) => {
+                const input = e.target;
+                const numberValue = parseCurrency(input.value);
+                if (isNaN(numberValue)) return;
+                input.value = numberValue > 0 ? formatCurrency(numberValue).replace('MXN', '') : '';
+            };
+            
+            const showToast = (message) => {
+                toast.textContent = message;
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            };
+
+            // --- CHART PLUGINS ---
+            const createVerticalLinePlugin = (config) => ({
+                id: config.id,
+                afterDraw: (chart) => {
+                    const month = chart.options.plugins[config.id].month;
+                    if (!month) return;
+                    const ctx = chart.ctx, xAxis = chart.scales.x, yAxis = chart.scales.y;
+                    const x = xAxis.getPixelForValue(month - 1);
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(x, yAxis.top);
+                    ctx.lineTo(x, yAxis.bottom);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = config.color;
+                    ctx.setLineDash([6, 6]);
+                    ctx.stroke();
+                    ctx.fillStyle = config.color;
+                    ctx.textAlign = 'center';
+                    ctx.font = '12px Inter';
+                    ctx.fillText(`${config.label} Mes ${month}`, x, yAxis.bottom + 15);
+                    ctx.restore();
+                }
+            });
+
+            const crossoverLinePlugin = createVerticalLinePlugin({ id: 'crossoverLine', label: 'Cruce', color: 'rgba(255, 255, 255, 0.9)' });
+            const strategyCrossoverLinePlugin = createVerticalLinePlugin({ id: 'strategyCrossoverLine', label: 'Cruce', color: 'rgba(192, 132, 252, 0.9)' }); // Purple
+            const liquidationLinePlugin = createVerticalLinePlugin({ id: 'liquidationLine', label: 'Liquidación', color: 'rgba(249, 115, 22, 0.9)' }); // Orange
+            Chart.register(crossoverLinePlugin, strategyCrossoverLinePlugin, liquidationLinePlugin);
+
+            // --- CORE CALCULATION LOGIC ---
+            function calculateAll() {
+                const monthlyIncome = parseCurrency(monthlyIncomeInput.value) || 0;
+                const loanTermYears = parseInt(document.getElementById('loanTerm').value);
+                const downPaymentPercent = parseFloat(document.getElementById('downPayment').value);
+                const annualRate = parseFloat(document.getElementById('annualRate').value);
+
+                const monthlyRate = (annualRate / 100) / MONTHS_IN_YEAR;
+                const totalPayments = loanTermYears * MONTHS_IN_YEAR;
+                
+                updateLabels();
+
+                const maxMonthlyPaymentCore = monthlyIncome * INCOME_TO_MORTGAGE_RATIO;
+                const ratePower = Math.pow(1 + monthlyRate, totalPayments);
+                let loanAmount = maxMonthlyPaymentCore * (ratePower - 1) / (monthlyRate * ratePower);
+                
+                for(let i = 0; i < 5; i++) {
+                    let estPropVal = loanAmount / (1 - (downPaymentPercent / 100));
+                    let estLifeIns = loanAmount * LIFE_INSURANCE_FACTOR;
+                    let estDmgIns = estPropVal * DAMAGE_INSURANCE_FACTOR;
+                    let adjMonthly = maxMonthlyPaymentCore - estLifeIns - estDmgIns;
+                    loanAmount = adjMonthly * (ratePower - 1) / (monthlyRate * ratePower);
+                }
+
+                maxCalculatedPropertyValue = loanAmount / (1 - (downPaymentPercent / 100));
+                
+                if (maxCalculatedPropertyValue < MIN_PROPERTY_VALUE) {
+                    propertyValueInput.value = 'No te alcanza';
+                    resetCalculations();
+                    return;
+                }
+                
+                showSections();
+                propertyValueInput.value = formatCurrency(maxCalculatedPropertyValue).replace('MXN', '');
+                recalculateFromPropertyValue(maxCalculatedPropertyValue);
+            }
+            
+            function recalculateFromPropertyValue(propertyValue) {
+                const loanTermYears = parseInt(document.getElementById('loanTerm').value);
+                const downPaymentPercent = parseFloat(document.getElementById('downPayment').value);
+                const notaryFeesPercent = parseFloat(document.getElementById('notaryFees').value);
+                const openingFeePercent = parseFloat(document.getElementById('openingFee').value);
+                const appraisalPercent = parseFloat(document.getElementById('appraisal').value);
+                const annualRate = parseFloat(document.getElementById('annualRate').value);
+
+                const monthlyRate = (annualRate / 100) / MONTHS_IN_YEAR;
+                const totalPayments = loanTermYears * MONTHS_IN_YEAR;
+                
+                const loanAmount = propertyValue * (1 - (downPaymentPercent / 100));
+
+                const downPaymentAmount = propertyValue * (downPaymentPercent / 100);
+                const notaryFeesAmount = propertyValue * (notaryFeesPercent / 100);
+                const openingFeeAmount = loanAmount * (openingFeePercent / 100);
+                const appraisalAmount = propertyValue * (appraisalPercent / 100);
+                const totalInitial = downPaymentAmount + notaryFeesAmount + openingFeeAmount + appraisalAmount;
+
+                downPaymentValue.textContent = formatCurrency(downPaymentAmount);
+                notaryFeesValue.textContent = formatCurrency(notaryFeesAmount);
+                openingFeeValue.textContent = formatCurrency(openingFeeAmount);
+                appraisalValue.textContent = formatCurrency(appraisalAmount);
+                totalInitialExpenses.textContent = formatCurrency(totalInitial);
+
+                prepayments = new Array(totalPayments).fill(0);
+                generateAmortization(loanAmount, monthlyRate, propertyValue, totalPayments, totalInitial);
+                recalculateWithPrepayments();
+            }
+
+            function updateLabels() {
+                const loanTermYears = parseInt(document.getElementById('loanTerm').value);
+                const downPaymentPercent = parseFloat(document.getElementById('downPayment').value);
+                const notaryFeesPercent = parseFloat(document.getElementById('notaryFees').value);
+                const openingFeePercent = parseFloat(document.getElementById('openingFee').value);
+                const appraisalPercent = parseFloat(document.getElementById('appraisal').value);
+                const annualRate = parseFloat(document.getElementById('annualRate').value);
+                const appreciationTerm1 = parseInt(appreciationTerm1Slider.value);
+                const appreciationRate1 = parseFloat(document.getElementById('appreciationRate1').value);
+                const appreciationRate2 = parseFloat(document.getElementById('appreciationRate2').value);
+
+                appreciationTerm1Slider.max = loanTermYears - 1;
+                const currentAppreciationTerm1 = Math.min(appreciationTerm1, loanTermYears - 1);
+                if (parseInt(appreciationTerm1Slider.value) !== currentAppreciationTerm1) {
+                    appreciationTerm1Slider.value = currentAppreciationTerm1;
+                }
+
+                loanTermLabel.textContent = `${loanTermYears} Años`;
+                annualRateLabel.textContent = `${annualRate.toFixed(1)}%`;
+                downPaymentLabel.textContent = `${downPaymentPercent.toFixed(1)}%`;
+                notaryFeesLabel.textContent = `${notaryFeesPercent.toFixed(1)}%`;
+                openingFeeLabel.textContent = `${openingFeePercent.toFixed(2)}%`;
+                appraisalLabel.textContent = `${appraisalPercent.toFixed(2)}%`;
+                appreciationTerm1Label.textContent = `${currentAppreciationTerm1} Año${currentAppreciationTerm1 > 1 ? 's' : ''}`;
+                appreciationRate1Label.textContent = `${appreciationRate1.toFixed(1)}%`;
+                const term2 = loanTermYears - currentAppreciationTerm1;
+                appreciationTerm2Label.textContent = `${term2} Año${term2 > 1 ? 's' : ''}`;
+                appreciationRate2Label.textContent = `${appreciationRate2.toFixed(1)}%`;
+            }
+            
+            function resetCalculations() {
+                [initialExpensesCard, monthlyExpensesCard, analysisDivider, analysisContainer].forEach(el => el.style.display = 'none');
+            }
+            function showSections() {
+                [initialExpensesCard, monthlyExpensesCard, analysisDivider, analysisContainer].forEach(el => el.style.display = 'block');
+            }
+
+            function generateAmortization(loanAmount, monthlyRate, propertyValue, totalPayments, totalInitial) {
+                if (loanAmount <= 0) return;
+                
+                financialWarning.classList.add('hidden');
+                detailedAmortizationTableBody.innerHTML = '';
+                let [totalPrincipal, totalInterest, totalInsurance, totalPaid] = [0, 0, 0, 0];
+                let [crossoverMonth, warningShown] = [null, false];
+                let remainingBalance = loanAmount;
+                const ratePower = Math.pow(1 + monthlyRate, totalPayments);
+                const coreMonthlyPayment = loanAmount * (monthlyRate * ratePower) / (ratePower - 1);
+                
+                const chartData = { labels: [], capital: [], interest: [], debt: [], propValue: [], cumulativePaid: [] };
+
+                for (let month = 1; month <= totalPayments; month++) {
+                    const interestPayment = remainingBalance * monthlyRate;
+                    const principalPayment = coreMonthlyPayment - interestPayment;
+                    const monthInsurance = (remainingBalance * LIFE_INSURANCE_FACTOR) + (propertyValue * DAMAGE_INSURANCE_FACTOR);
+                    const finalMonthlyPayment = coreMonthlyPayment + (interestPayment * IVA_RATE) + monthInsurance;
+
+                    if (!crossoverMonth && principalPayment > interestPayment) crossoverMonth = month;
+                    
+                    const row = document.createElement('tr');
+                    row.className = 'bg-gray-800 hover:bg-gray-700/50';
+                    row.innerHTML = `<td class="px-4 py-2 text-center">${month}</td><td class="px-4 py-2 text-right">${formatCurrency(remainingBalance)}</td><td class="px-4 py-2 text-right">${formatCurrency(principalPayment)}</td><td class="px-4 py-2 text-right">${formatCurrency(interestPayment)}</td><td class="px-4 py-2 text-right">${formatCurrency(monthInsurance)}</td><td class="px-4 py-2 text-right font-semibold text-white">${formatCurrency(finalMonthlyPayment)}</td>`;
+                    detailedAmortizationTableBody.appendChild(row);
+                    
+                    totalPrincipal += principalPayment;
+                    totalInterest += interestPayment;
+                    totalInsurance += monthInsurance;
+                    totalPaid += finalMonthlyPayment;
+                    remainingBalance -= principalPayment;
+                    
+                    chartData.labels.push(`Mes ${month}`);
+                    chartData.capital.push(principalPayment);
+                    chartData.interest.push(interestPayment);
+                    chartData.debt.push(remainingBalance < 0 ? 0 : remainingBalance);
+                    
+                    const appreciationTerm1Years = parseInt(document.getElementById('appreciationTerm1').value);
+                    const appreciationRate1 = parseFloat(document.getElementById('appreciationRate1').value) / 100;
+                    const appreciationRate2 = parseFloat(document.getElementById('appreciationRate2').value) / 100;
+                    const currentYearFraction = month / MONTHS_IN_YEAR;
+                    let currentPropertyValue;
+                    if (currentYearFraction <= appreciationTerm1Years) {
+                        currentPropertyValue = propertyValue * Math.pow(1 + appreciationRate1, currentYearFraction);
+                    } else {
+                        const valueAtEndOfPeriod1 = propertyValue * Math.pow(1 + appreciationRate1, appreciationTerm1Years);
+                        const yearsInSecondPeriod = currentYearFraction - appreciationTerm1Years;
+                        currentPropertyValue = valueAtEndOfPeriod1 * Math.pow(1 + appreciationRate2, yearsInSecondPeriod);
+                    }
+                    chartData.propValue.push(currentPropertyValue);
+
+                    const currentTotalPaid = totalInitial + totalPaid;
+                    chartData.cumulativePaid.push(currentTotalPaid);
+
+                    if (!warningShown && currentTotalPaid > currentPropertyValue) {
+                        financialWarning.textContent = `Atención: En el mes ${month}, el total que has pagado (${formatCurrency(currentTotalPaid)}) superará el valor proyectado de tu inmueble (${formatCurrency(currentPropertyValue)}). Considera ajustar las condiciones de tu crédito.`;
+                        financialWarning.classList.remove('hidden');
+                        warningShown = true;
+                    }
+                }
+                
+                baselineTotalPaid = totalPaid;
+                totalMonthlyPayment.textContent = formatCurrency(parseFloat(detailedAmortizationTableBody.querySelector('tr:first-child td:last-child').textContent.replace(/[^0-9.-]+/g,"")));
+                
+                updateTableFooter(detailedAmortizationTable, [ {content: 'Total'}, {content: ''}, {content: formatCurrency(totalPrincipal), align: 'text-right'}, {content: formatCurrency(totalInterest), align: 'text-right'}, {content: formatCurrency(totalInsurance), align: 'text-right'}, {content: formatCurrency(totalPaid), align: 'text-right'} ]);
+                updateAmortizationChart(chartData.labels, chartData.capital, chartData.interest, crossoverMonth);
+                updateProjectionChart(chartData.labels, chartData.debt, chartData.propValue, chartData.cumulativePaid, null, totalPayments);
+            }
+
+            function recalculateWithPrepayments() {
+                const loanTermYears = parseInt(document.getElementById('loanTerm').value);
+                const downPaymentPercent = parseFloat(document.getElementById('downPayment').value);
+                const annualRate = parseFloat(document.getElementById('annualRate').value);
+                const monthlyRate = (annualRate / 100) / MONTHS_IN_YEAR;
+                const totalPayments = loanTermYears * MONTHS_IN_YEAR;
+                const originalPropertyValue = parseCurrency(propertyValueInput.value);
+                if(isNaN(originalPropertyValue) || originalPropertyValue <= 0) return;
+
+                const loanAmount = originalPropertyValue * (1 - (downPaymentPercent / 100));
+
+                strategyTableBody.innerHTML = '';
+                const strategyChartData = { labels: [], balance: [], cumulativeInterest: [] };
+                const projectionChartData = { labels: [], debt: [], propValue: [], cumulativePaid: [] };
+
+                let remainingBalance = loanAmount;
+                let totalStrategyPaid = 0;
+                let cumulativeInterest = 0;
+                const totalInitial = parseCurrency(totalInitialExpenses.textContent);
+
+                const ratePowerOriginal = Math.pow(1 + monthlyRate, totalPayments);
+                const coreMonthlyPayment = loanAmount * (monthlyRate * ratePowerOriginal) / (ratePowerOriginal - 1);
+                let liquidationMonth = totalPayments;
+
+                for (let month = 1; month <= totalPayments; month++) {
+                    if (remainingBalance <= 0) {
+                        liquidationMonth = month - 1;
+                        break;
+                    }
+
+                    const prepayment = prepayments[month - 1] || 0;
+                    const interestPayment = remainingBalance * monthlyRate;
+                    cumulativeInterest += interestPayment;
+                    
+                    const principalPayment = coreMonthlyPayment - interestPayment;
+                    const finalMonthlyPayment = coreMonthlyPayment + (interestPayment * IVA_RATE) + (remainingBalance * LIFE_INSURANCE_FACTOR) + (originalPropertyValue * DAMAGE_INSURANCE_FACTOR);
+                    
+                    remainingBalance -= (principalPayment + prepayment);
+                    totalStrategyPaid += finalMonthlyPayment + prepayment;
+
+                    const row = document.createElement('tr');
+                    row.className = 'bg-gray-800 border-b border-gray-700 hover:bg-gray-700/50';
+                    row.innerHTML = `<td class="px-4 py-2 text-center">${month}</td><td class="px-4 py-2 text-right">${formatCurrency(remainingBalance < 0 ? 0 : remainingBalance)}</td><td class="px-4 py-2 text-right">${formatCurrency(finalMonthlyPayment)}</td><td class="px-4 py-2"><input type="text" value="${prepayment > 0 ? formatCurrency(prepayment).replace('MXN','') : ''}" class="prepayment-input" data-month="${month-1}"></td>`;
+                    strategyTableBody.appendChild(row);
+
+                    strategyChartData.labels.push(`Mes ${month}`);
+                    strategyChartData.balance.push(remainingBalance < 0 ? 0 : remainingBalance);
+                    strategyChartData.cumulativeInterest.push(cumulativeInterest);
+                }
+
+                // Generate full projection data based on the new (potentially shorter) term
+                let projRemainingBalance = loanAmount;
+                let projCumulativePaid = 0;
+                for (let month = 1; month <= totalPayments; month++) {
+                     projectionChartData.labels.push(`Mes ${month}`);
+                    
+                    const appreciationTerm1Years = parseInt(document.getElementById('appreciationTerm1').value);
+                    const appreciationRate1 = parseFloat(document.getElementById('appreciationRate1').value) / 100;
+                    const appreciationRate2 = parseFloat(document.getElementById('appreciationRate2').value) / 100;
+                    const currentYearFraction = month / MONTHS_IN_YEAR;
+                    let currentPropertyValue;
+                    if (currentYearFraction <= appreciationTerm1Years) {
+                        currentPropertyValue = originalPropertyValue * Math.pow(1 + appreciationRate1, currentYearFraction);
+                    } else {
+                        const valueAtEndOfPeriod1 = originalPropertyValue * Math.pow(1 + appreciationRate1, appreciationTerm1Years);
+                        const yearsInSecondPeriod = currentYearFraction - appreciationTerm1Years;
+                        currentPropertyValue = valueAtEndOfPeriod1 * Math.pow(1 + appreciationRate2, yearsInSecondPeriod);
+                    }
+                    projectionChartData.propValue.push(currentPropertyValue);
+
+                    if (month <= liquidationMonth) {
+                        const prepayment = prepayments[month - 1] || 0;
+                        const interestPayment = projRemainingBalance * monthlyRate;
+                        const principalPayment = coreMonthlyPayment - interestPayment;
+                        const finalMonthlyPayment = coreMonthlyPayment + (interestPayment * IVA_RATE) + (projRemainingBalance * LIFE_INSURANCE_FACTOR) + (originalPropertyValue * DAMAGE_INSURANCE_FACTOR);
+                        projRemainingBalance -= (principalPayment + prepayment);
+                        projCumulativePaid += finalMonthlyPayment + prepayment;
+                        
+                        projectionChartData.debt.push(projRemainingBalance < 0 ? 0 : projRemainingBalance);
+                        projectionChartData.cumulativePaid.push(totalInitial + projCumulativePaid);
+                    } else {
+                        projectionChartData.debt.push(NaN); // Use NaN to create a break in the line
+                        projectionChartData.cumulativePaid.push(NaN);
+                    }
+                }
+
+
+                let strategyCrossoverMonth = null;
+                for(let i = 0; i < strategyChartData.balance.length; i++) {
+                    if (strategyChartData.cumulativeInterest[i] > strategyChartData.balance[i]) {
+                        strategyCrossoverMonth = i + 1;
+                        break;
+                    }
+                }
+
+                updateStrategyChart(strategyChartData.labels, strategyChartData.balance, strategyChartData.cumulativeInterest, strategyCrossoverMonth);
+                updateProjectionChart(projectionChartData.labels, projectionChartData.debt, projectionChartData.propValue, projectionChartData.cumulativePaid, liquidationMonth, totalPayments);
+                updateTableFooter(strategyTable, [ {content: 'Total Pagado', colspan: 3, align: 'text-right'}, {content: formatCurrency(totalStrategyPaid), align: 'text-right'} ]);
+
+                // Update summary
+                const totalSavings = baselineTotalPaid - totalStrategyPaid;
+                const monthsSaved = totalPayments - liquidationMonth;
+                summaryTotalPaid.textContent = formatCurrency(totalStrategyPaid + totalInitial);
+                summaryInterestPaid.textContent = formatCurrency(cumulativeInterest);
+                summarySavings.textContent = formatCurrency(totalSavings > 0 ? totalSavings : 0);
+                summaryNewTerm.textContent = `${(liquidationMonth / 12).toFixed(1)} Años`;
+                summaryMonthsSaved.textContent = monthsSaved > 0 ? monthsSaved : 0;
+            }
+            
+            function updateTableFooter(table, cells) {
+                table.querySelector('tfoot')?.remove();
+                const tfoot = table.createTFoot();
+                const row = tfoot.insertRow();
+                row.className = 'text-white font-bold bg-gray-700/80';
+                cells.forEach(cell => {
+                    const td = row.insertCell();
+                    td.className = `px-4 py-2 ${cell.align || 'left'}`;
+                    if(cell.colspan) td.colSpan = cell.colspan;
+                    td.innerHTML = cell.content || '';
+                });
+            }
+
+            // --- CHART UPDATE FUNCTIONS ---
+            function updateAmortizationChart(labels, capital, interest, crossover) {
+                if (amortizationChart) amortizationChart.destroy();
+                amortizationChart = new Chart(amortizationChartCanvas, { type: 'line', data: { labels, datasets: [ { label: 'Capital', data: capital, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, pointRadius: 0 }, { label: 'Intereses', data: interest, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, pointRadius: 0 } ]}, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { bottom: 20 }}, plugins: { legend: { labels: { color: '#d1d5db' }}, tooltip: { mode: 'index', intersect: false }, crossoverLine: { month: crossover }}, scales: { x: { display: false }, y: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.1)' }}}} });
+            }
+            function updateProjectionChart(labels, debt, property, cumulativePaid, liquidationMonth, originalTotalPayments) {
+                if (projectionChart) projectionChart.destroy();
+                projectionChart = new Chart(projectionChartCanvas, { type: 'line', data: { labels, datasets: [ { label: 'Valor del Inmueble (Plusvalía)', data: property, borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.1)', fill: true, tension: 0.4, pointRadius: 0 }, { label: 'Deuda Restante', data: debt, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, pointRadius: 0, spanGaps: false }, { label: 'Total Pagado (Acumulado)', data: cumulativePaid, borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.4, pointRadius: 0, spanGaps: false } ]}, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { bottom: 20 }}, plugins: { legend: { labels: { color: '#d1d5db' }}, tooltip: { mode: 'index', intersect: false }, liquidationLine: { month: liquidationMonth < originalTotalPayments ? liquidationMonth : null } }, scales: { x: { ticks: { color: '#9ca3af', callback: function(value, index, ticks) { if (index === 0 || index === ticks.length - 1) { return this.getLabelForValue(value); } return ''; }, autoSkip: false, maxRotation: 0 } }, y: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.1)' }}}} });
+            }
+            function updateStrategyChart(labels, balance, cumulativeInterest, crossover) {
+                if (strategyChart) strategyChart.destroy();
+                strategyChart = new Chart(strategyChartCanvas, { type: 'line', data: { labels, datasets: [ { label: 'Saldo Insoluto', data: balance, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, pointRadius: 0 }, { label: 'Intereses Acumulados', data: cumulativeInterest, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, pointRadius: 0 } ]}, options: { responsive: true, maintainAspectRatio: false, layout: { padding: { bottom: 20 }}, plugins: { legend: { labels: { color: '#d1d5db' }}, tooltip: { mode: 'index', intersect: false }, strategyCrossoverLine: { month: crossover }}, scales: { x: { ticks: { color: '#9ca3af', callback: function(value, index, ticks) { if (index === 0 || index === ticks.length - 1) { return this.getLabelForValue(value); } return ''; }, autoSkip: false, maxRotation: 0 } }, y: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,0.1)' }}}} });
+            }
+
+            // --- EVENT LISTENERS ---
+            allInputs.forEach(input => input.addEventListener('input', calculateAll));
+            monthlyIncomeInput.addEventListener('blur', formatInputAsCurrency);
+            
+            propertyValueInput.addEventListener('blur', (e) => {
+                let userValue = parseCurrency(e.target.value);
+                let correctedValue = userValue;
+                
+                if (userValue > maxCalculatedPropertyValue) {
+                    showToast(`El valor no puede superar ${formatCurrency(maxCalculatedPropertyValue)} según tu ingreso.`);
+                    correctedValue = maxCalculatedPropertyValue;
+                } else if (userValue < MIN_PROPERTY_VALUE) {
+                    showToast(`El valor mínimo de la vivienda es ${formatCurrency(MIN_PROPERTY_VALUE)}.`);
+                    correctedValue = MIN_PROPERTY_VALUE;
+                }
+                
+                e.target.value = formatCurrency(correctedValue).replace('MXN', '');
+                recalculateFromPropertyValue(correctedValue);
+            });
+
+            strategyTableBody.addEventListener('blur', (e) => {
+                if (e.target.classList.contains('prepayment-input')) {
+                    formatInputAsCurrency(e);
+                    const monthIndex = parseInt(e.target.dataset.month);
+                    prepayments[monthIndex] = parseCurrency(e.target.value) || 0;
+                    recalculateWithPrepayments();
+                }
+            }, true);
+
+            document.querySelectorAll('.editable-value').forEach(label => {
+                label.addEventListener('click', (e) => {
+                    const span = e.target;
+                    const sliderId = span.dataset.sliderId;
+                    const slider = document.getElementById(sliderId);
+                    
+                    const currentValue = parseFloat(span.textContent.replace(/[^\d.-]/g, ''));
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = currentValue;
+                    input.className = 'bg-gray-900 text-blue-400 font-semibold text-right w-20 p-1 rounded';
+                    
+                    span.replaceWith(input);
+                    input.focus();
+                    input.select();
+
+                    const saveValue = () => {
+                        let newValue = parseFloat(input.value);
+                        const min = parseFloat(slider.min);
+                        const max = parseFloat(slider.max);
+
+                        if (isNaN(newValue) || newValue < min) {
+                            newValue = min;
+                        } else if (newValue > max) {
+                            newValue = max;
+                        }
+
+                        slider.value = newValue;
+                        input.replaceWith(span);
+                        calculateAll();
+                    };
+
+                    input.addEventListener('blur', saveValue);
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            input.blur();
+                        } else if (e.key === 'Escape') {
+                            input.value = currentValue; // Revert
+                            input.blur();
+                        }
+                    });
+                });
+            });
+
+            // --- INITIALIZATION ---
+            calculateAll();
+        });
+    </script>
+</body>
+</html>
